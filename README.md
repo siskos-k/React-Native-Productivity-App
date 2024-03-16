@@ -18,7 +18,7 @@ To run the app locally, follow these steps:
 1. Clone this repository:
 
    ```bash
-   git clone [https://github.com/yourusername/react-native-productivity-app.git](https://github.com/siskos-k/React-Native-Productivity-App.git)
+   git clone https://github.com/siskos-k/React-Native-Productivity-App.git
    ```
 
 2. Navigate to the project directory:
