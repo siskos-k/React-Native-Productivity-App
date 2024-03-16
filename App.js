@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, CheckBox } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function App() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([{ text: "task1", completed: false }]);
   const [taskText, setTaskText] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false); 
 
   const addTask = () => {
     if (taskText.trim() !== '') {
-      setTasks([...tasks, taskText]);
+      setTasks([...tasks, { text: taskText, completed: false }]);
       setTaskText('');
     }
   };
@@ -19,8 +20,20 @@ export default function App() {
     setTasks(updatedTasks);
   };
 
+  const toggleTaskCompletion = index => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].completed = !updatedTasks[index].completed;
+    setTasks(updatedTasks);
+  };
+
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const handleKeyPress = ({ nativeEvent }) => {
+    if (nativeEvent.key === 'Enter') {
+      addTask();
+    }
   };
 
   return (
@@ -31,17 +44,28 @@ export default function App() {
         placeholder="Enter task..."
         value={taskText}
         onChangeText={text => setTaskText(text)}
+        onKeyPress={handleKeyPress}
       />
       <TouchableOpacity style={[styles.addButton, isDarkMode && styles.addButtonDark]} onPress={addTask}>
         <Text style={[styles.buttonText, isDarkMode && styles.buttonTextDark]}>Add Task</Text>
       </TouchableOpacity>
       {tasks.map((task, index) => (
-        <TouchableOpacity key={index} onPress={() => removeTask(index)}>
-          <Text style={[styles.task, isDarkMode && styles.taskDark]}>{task}</Text>
-        </TouchableOpacity>
+        <View style={styles.taskBox} key={index}>
+          <View style={[styles.taskContainer, isDarkMode && {borderColor: "white"}]}>
+            <Text style={[styles.task, isDarkMode && styles.taskDark, task.completed && styles.completedTask]}>{task.text}</Text>
+          </View>
+          <CheckBox
+            value={task.completed}
+            onValueChange={() => toggleTaskCompletion(index)}
+          />
+          <View style={{marginRight: 10}}></View>
+          <TouchableOpacity onPress={() => removeTask(index)}>
+            <Icon name="trash" size={20} color="red" />
+          </TouchableOpacity>
+        </View>
       ))}
-      <TouchableOpacity onPress={toggleDarkMode}>
-        <Text style={[styles.darkModeButton, isDarkMode && styles.darkModeButtonDark]}>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</Text>
+      <TouchableOpacity onPress={toggleDarkMode} style={styles.darkModeButton}>
+        <Icon name={isDarkMode ? 'sun-o' : 'moon-o'} size={30} color={isDarkMode ? 'yellow' : 'black'} />
       </TouchableOpacity>
       <StatusBar style="auto" />
     </View>
@@ -76,6 +100,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
+    borderRadius: 10,
   },
   inputDark: {
     color: '#fff',
@@ -98,19 +123,33 @@ const styles = StyleSheet.create({
   buttonTextDark: {
     color: '151515', 
   },
+  taskBox:{
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  taskContainer: {
+    borderColor: 'black',
+    borderWidth: 3,
+    borderRadius: 10,
+    padding: 2,
+    width: 200,
+    alignItems: 'center',
+    margin: 10,
+  },
   task: {
     fontSize: 16,
-    marginBottom: 10,
+    margin: 10,
   },
   taskDark: {
     color: 'white', 
   },
-  darkModeButton: {
-    marginTop: 10,
-    color: '151515',
+  completedTask: {
+    textDecorationLine: 'line-through',
+    color: 'gray',
   },
-  darkModeButtonDark: {
-    marginTop: 10,
-    color: 'white',
+  darkModeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
 });
