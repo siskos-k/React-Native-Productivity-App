@@ -5,7 +5,9 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 export default function App() {
   const [tasks, setTasks] = useState([{ text: "task1", completed: false }]);
   const [taskText, setTaskText] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); 
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [dailyHighlight, setDailyHighlight] = useState('');
+  const [completedTasksCount, setCompletedTasksCount] = useState(0); 
 
   const addTask = () => {
     if (taskText.trim() !== '') {
@@ -14,31 +16,49 @@ export default function App() {
     }
   };
 
-  const removeTask = index => {
-    let updatedTasks = [...tasks];
-    updatedTasks.splice(index, 1);
-    setTasks(updatedTasks);
-  };
-
-  const toggleTaskCompletion = index => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].completed = !updatedTasks[index].completed;
-    setTasks(updatedTasks);
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   const handleKeyPress = ({ nativeEvent }) => {
     if (nativeEvent.key === 'Enter') {
       addTask();
     }
   };
 
+  const removeTask = index => {
+    let updatedTasks = [...tasks];
+    updatedTasks.splice(index, 1);
+    setTasks(updatedTasks);
+    if (tasks[index].completed) {
+      setCompletedTasksCount(completedTasksCount - 1);
+    }
+  };
+
+  const handleTaskAction = (index, action) => {
+    const updatedTasks = tasks.map((task, i) => i === index ? { ...task, completed: action === 'toggle' ? !task.completed : task.completed } : task);
+    setTasks(updatedTasks);
+    if (updatedTasks[index].completed && action !== 'remove') {
+      setCompletedTasksCount(completedTasksCount + 1);
+    } else if (!updatedTasks[index].completed && action !== 'remove') {
+      setCompletedTasksCount(completedTasksCount - 1);
+    }
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const handleHighlightChange = text => {
+    setDailyHighlight(text);
+  };
+
   return (
-    <View style={[styles.container, isDarkMode && styles.containerDark]}> 
-      <Text style={[styles.title, isDarkMode && styles.titleDark]}>To-Do List</Text> 
+    <View style={[styles.container, isDarkMode && styles.containerDark]}>
+      <Text style={[styles.title, isDarkMode && styles.titleDark]}>Daily Highlight</Text>
+      <TextInput
+        style={[styles.input, isDarkMode && styles.inputDark]}
+        placeholder="The most important thing you'll do today"
+        value={dailyHighlight}
+        onChangeText={handleHighlightChange}
+      />
+      <Text style={[styles.title, isDarkMode && styles.titleDark]}>To-Do List</Text>
       <TextInput
         style={[styles.input, isDarkMode && styles.inputDark]}
         placeholder="Enter task..."
@@ -51,19 +71,20 @@ export default function App() {
       </TouchableOpacity>
       {tasks.map((task, index) => (
         <View style={styles.taskBox} key={index}>
-          <View style={[styles.taskContainer, isDarkMode && {borderColor: "white"}]}>
+          <View style={[styles.taskContainer, isDarkMode && { borderColor: "white" }]}>
             <Text style={[styles.task, isDarkMode && styles.taskDark, task.completed && styles.completedTask]}>{task.text}</Text>
           </View>
           <CheckBox
             value={task.completed}
-            onValueChange={() => toggleTaskCompletion(index)}
+            onValueChange={() => handleTaskAction(index, 'toggle')}
           />
-          <View style={{marginRight: 10}}></View>
-          <TouchableOpacity onPress={() => removeTask(index)}>
+          <View style={{ marginRight: 10 }}></View>
+          <TouchableOpacity onPress={() => handleTaskAction(index, 'remove')}>
             <Icon name="trash" size={20} color="red" />
           </TouchableOpacity>
         </View>
       ))}
+      <Text style={styles.completedTasksText}>Completed Tasks: {completedTasksCount} / {tasks.length}</Text> 
       <TouchableOpacity onPress={toggleDarkMode} style={styles.darkModeButton}>
         <Icon name={isDarkMode ? 'sun-o' : 'moon-o'} size={30} color={isDarkMode ? 'yellow' : 'black'} />
       </TouchableOpacity>
@@ -73,7 +94,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -82,16 +102,15 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   containerDark: {
-    backgroundColor: '#111', 
+    backgroundColor: '#111',
   },
-  
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
   },
   titleDark: {
-    color: '#fff', 
+    color: '#fff',
   },
   input: {
     width: '80%',
@@ -104,8 +123,8 @@ const styles = StyleSheet.create({
   },
   inputDark: {
     color: '#fff',
-    backgroundColor: '#222', 
-    borderColor: '#444', 
+    backgroundColor: '#222',
+    borderColor: '#444',
   },
   addButton: {
     backgroundColor: 'black',
@@ -114,16 +133,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addButtonDark: {
-    backgroundColor: 'white', 
+    backgroundColor: 'white',
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
   },
   buttonTextDark: {
-    color: '151515', 
+    color: '#151515',
   },
-  taskBox:{
+  taskBox: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -141,7 +160,7 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   taskDark: {
-    color: 'white', 
+    color: 'white',
   },
   completedTask: {
     textDecorationLine: 'line-through',
@@ -151,5 +170,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
+  },
+  completedTasksText: {
+    marginTop: 10,
+    fontWeight: 'bold',
   },
 });
